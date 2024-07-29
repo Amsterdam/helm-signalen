@@ -23,7 +23,7 @@ build: clean
 	done
 
 push: build
-	PKGS := $(shell find ${BUILD_REPOSITORY_LOCALPATH} -type f -name "*.tgz")
+	PKGS=$(find ${BUILD_REPOSITORY_LOCALPATH} -type f -name "*.tgz")
 	@for pkg in $(PKGS); do \
 		helm push ${pkg} oci://${REGISTRY}/${REPOSITORY}; \
 	done
