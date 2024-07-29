@@ -9,7 +9,7 @@ PWD:=$(shell pwd)
 CHARTS_DIR ?= charts
 
 clean:
-	find .
+	echo nope
 
 docs:
 	npm install @bitnami/readme-generator-for-helm@2.5.0 ./node_modules/.bin/readme-generator readme-generator \
@@ -21,6 +21,7 @@ build: clean
 		echo $$chart; \
 		helm dependency update $$chart; \
 		helm package $$chart --version ${VERSION}; \
+		echo $(pwd) ; \
 	done
 
 push: build
