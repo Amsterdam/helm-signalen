@@ -21,17 +21,13 @@ build: clean
 		helm dependency update $$chart; \
 		helm package $$chart --version ${VERSION}; \
 	done
-	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +; \
 
 push: build
-	set -a ; \
-	set -x ; \
 	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +; \
-	echo "BUILD PATH: " ${BUILD_REPOSITORY_LOCALPATH}; \
 	FILES=$(shell echo $(wildcard ${BUILD_REPOSITORY_LOCALPATH}/*.tgz))
 	@for file in $(FILES); do \
 		echo "F: " ${file}; \
-		helm push $(basename ${file}) oci://${REGISTRY}/${REPOSITORY}; \
+		helm push "${file}" oci://${REGISTRY}/${REPOSITORY}; \
 	done
 
 helm-unittest-plugin:
