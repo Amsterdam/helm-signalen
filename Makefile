@@ -20,6 +20,7 @@ build: clean
 		echo $$chart; \
 		helm dependency update $$chart; \
 		helm package $$chart --version ${VERSION}; \
+		mkdir ${BUILD_REPOSITORY_LOCALPATH}/charts && mv -v ${BUILD_REPOSITORY_LOCALPATH}/*.tgz ${BUILD_REPOSITORY_LOCALPATH}/charts/;
 	done
 
 push: build
