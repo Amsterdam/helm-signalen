@@ -1,0 +1,36 @@
+{{- if and .Values.persistence.media.enabled (not .Values.persistence.media.existingClaim) }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "signals-backend.fullname" . }}
+  labels:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+spec:
+  accessModes:
+{{- toYaml .Values.persistence.media.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.media.size }}
+{{- if .Values.persistence.media.storageClassName }}
+  storageClassName: {{ .Values.persistence.media.storageClassName | quote }}
+{{- end }}
+{{- end }}
+{{- if and .Values.persistence.datawarehouse.enabled (not .Values.persistence.datawarehouse.existingClaim) }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "signals-backend.fullname" . }}-datawarehouse
+  labels:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+spec:
+  accessModes:
+{{ toYaml .Values.persistence.datawarehouse.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.datawarehouse.size }}
+{{- if .Values.persistence.datawarehouse.storageClassName }}
+  storageClassName: {{ .Values.persistence.datawarehouse.storageClassName | quote }}
+{{- end }}
+{{- end }}

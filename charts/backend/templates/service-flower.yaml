@@ -1,0 +1,19 @@
+{{- if .Values.flower.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ template "signals-backend.celery-flower" . }}
+  labels:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+    component: cellery-flower
+spec:
+  selector:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+    component: celery-flower
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+{{- end }}

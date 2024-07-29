@@ -1,0 +1,168 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "signals-backend.fullname" . }}
+  labels:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+    component: backend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "signals-backend.selectorLabels" . | nindent 6 }}
+      component: backend
+  strategy:
+    type: {{ .Values.deploymentStrategy }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "signals-backend.labels" . | nindent 8 }}
+        component: backend
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: migrate
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /usr/local/bin/python
+          args:
+            - '/app/manage.py'
+            - 'migrate'
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.envVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "signals-backend.fullname" . }}
+            - secretRef:
+                name: {{ if .Values.existingSecret }}{{ .Values.existingSecret }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+          {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        - name: create-cache-table
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /usr/local/bin/python
+          args:
+            - '/app/manage.py'
+            - 'createcachetable'
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.envVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "signals-backend.fullname" . }}
+            - secretRef:
+                name: {{ if .Values.existingSecret }}{{ .Values.existingSecret }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+          {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+      containers:
+        - name: api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /usr/local/bin/uwsgi
+          args:
+            - '--master'
+            - '--http=:8000'
+            - '--module=signals.wsgi:application'
+            - '--buffer-size=8192'
+            - '--processes={{ .Values.uwsgi.processes }}'
+            - '--threads={{ .Values.uwsgi.threads }}'
+            - '--static-map=/signals/static=/app/static'
+            - '--static-map=/signals/media=/app/media'
+            - '--die-on-term'
+            - '--lazy-apps'
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.envVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "signals-backend.fullname" . }}
+            - secretRef:
+                name: {{ if .Values.existingSecret }}{{ .Values.existingSecret }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+          {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: media
+              mountPath: /app/media
+            - name: dwh-media
+              mountPath: /dwh_media
+{{- if ne (len .Values.extraVolumeMounts) 0 }}
+{{ toYaml .Values.extraVolumeMounts | indent 12 }}
+{{- end }}
+
+          livenessProbe:
+            httpGet:
+              path: /status/health
+              port: http
+            initialDelaySeconds: {{ .Values.probes.backend.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.backend.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.backend.livenessProbe.timeoutSeconds }}
+          readinessProbe:
+            httpGet:
+              path: /status/health
+              port: http
+            initialDelaySeconds: {{ .Values.probes.backend.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.backend.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.backend.readinessProbe.timeoutSeconds }}
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 8000
+      volumes:
+        - name: media
+        {{- if .Values.persistence.media.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.media.existingClaim }}{{ .Values.persistence.media.existingClaim }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        - name: dwh-media
+        {{- if .Values.persistence.datawarehouse.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.datawarehouse.existingClaim }}{{ .Values.persistence.datawarehouse.existingClaim }}{{ else }}{{ template "signals-backend.fullname" . }}-datawarehouse{{ end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+{{- if ne (len .Values.extraVolumes) 0 }}
+{{ toYaml .Values.extraVolumes | indent 8 }}
+{{- end }}

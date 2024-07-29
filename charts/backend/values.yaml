@@ -1,0 +1,249 @@
+tags:
+  postgresql: true
+  rabbitmq: true
+  elasticsearch: true
+
+replicaCount: 1
+workerReplicaCount: 1
+
+uwsgi:
+  processes: 4
+  threads: 2
+
+celery:
+  loglevel: WARNING
+  concurrency: 2
+
+deploymentStrategy: RollingUpdate
+
+image:
+  repository: signalen/backend
+  tag: ""
+  pullPolicy: IfNotPresent
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 999
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 25m
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: api.signals.local
+      paths:
+        - path: /signals
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: backend-tls
+      hosts:
+        - api.signals.local
+
+probes:
+  backend:
+    livenessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      timeoutSeconds: 15
+    readinessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      timeoutSeconds: 15
+
+resources: {}
+
+worker:
+  resources: {}
+
+beat:
+  resources: {}
+
+flower:
+  enabled: false
+  basicAuth: signalen:signalen
+  resources: {}
+
+persistence:
+  media:
+    enabled: true
+    enabledOnWorker: false
+    size: 1Gi
+    existingClaim: null
+    accessModes:
+      - ReadWriteOnce
+    storageClassName: ""
+  datawarehouse:
+    enabled: false
+    enabledOnWorker: true
+    size: 1Gi
+    existingClaim: null
+    accessModes:
+      - ReadWriteMany
+    storageClassName: ""
+
+existingSecret: null # Refer to existing secret to avoid managing secrets through Helm
+
+extraVolumes: []
+extraVolumeMounts: []
+
+# -- Additional environment variables mounted from [secrets](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables) or [config maps](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#configure-all-key-value-pairs-in-a-configmap-as-container-environment-variables).
+# See the [API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#environment-variables) for details.
+envFrom: []
+
+# -- Additional environment variables passed directly to containers.
+# See the [API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#environment-variables) for details.
+env: {}
+
+# -- Similar to env but with support for all possible configurations.
+# See the [API reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#environment-variables) for details.
+envVars: []
+# - name: SOME_ENV_VAR
+#   value: value
+# - name: SOME_ENV_VAR2
+#   valueFrom:
+#     secretKeyRef:
+#       name: secret-name
+#       key: secret-key
+# - name: SOME_ENV_VAR3
+#   valueFrom:
+#     configMapKeyRef:
+#       name: config-map-name
+#       key: config-map-key
+
+# -- Hook to run one or multiple management commands post-install and post-upgrade.
+managementCommands: ""
+# managementCommands: |
+#   python manage.py elastic_index --init
+#   python manage.py elastic_index --index-all
+
+settings:
+  secretKey: "change-to-something-secret"
+  allowedHosts: "*"
+  defaultPdokMunicipalities: ""
+  defaultMapTileServer: ""
+  pubJwks: ""
+  jwksUrl: ""
+  userIdField: "sub"
+
+  environment: "production"
+
+  organizationName: "Signalen"
+  defaultFromEmail: "webmaster@localhost"
+
+  apiTransformSourceBasedOnReporter: false
+  apiTransformSourceBasedOnReporterSource: "Internal"
+  apiTransformSourceBasedOnReporterDomainExtensions: "@localhost"
+  apiTransformSourceBasedOnReporterExceptions: "ignore@localhost"
+
+  excludedPermissionsInResponses: >-
+    sia_delete_attachment_of_normal_signal,
+    sia_delete_attachment_of_parent_signal,
+    sia_delete_attachment_of_child_signal,
+    sia_delete_attachment_of_other_user
+
+  apiPdfLogoStaticFile: api/logo-gemeente-amsterdam.svg
+  systemMailFeedbackReceivedEnabled: false
+  reporterMailHandledNegativeContactEnabled: false
+  signalHistoryLogEnabled: false
+
+  database:
+    host: signalen-backend-postgresql
+    port: 5432
+    username: postgres
+    password: signalen
+    name: signalen
+
+  rabbitmq:
+    host: signalen-backend-rabbitmq
+    username: signalen
+    password: signalen
+    vhost: ""
+
+  elasticsearch:
+    host: elasticsearch-master:9200 # first part corresponds with elasticsearch.clusterName
+    index: signalen
+
+  email:
+    hostname: mailhog
+    port: 25
+    username: ""
+    password: ""
+    useTLS: false
+    useSSL: false
+
+    restEndpoint: ""
+    restEndpointClientCert: ""
+    restEndpointClientKey: ""
+
+  celeryEmailBackend: django.core.mail.backends.smtp.EmailBackend
+
+  datapuntApiUrl: https://api.data.amsterdam.nl/
+  frontendUrl: ""  # URL pointing to Signalen frontend (back office)
+
+  classificationEndpoint: https://api.data.amsterdam.nl/signals_mltool
+
+  enablePublicGeoSignalEndpoint: false
+  allowInvalidAddressAsUnverified: true
+
+  sigmax:
+    enabled: false
+    serverUrl: http://sigmax.sigmax
+    authToken: insecure
+
+#########################
+## PostgreSQL subchart ##
+#########################
+postgresql:
+  auth:
+    postgresPassword: signalen
+    database: signalen
+
+  primary:
+    persistence:
+      enabled: false
+      size: 1Gi
+      existingClaim: null
+
+#######################
+## RabbitMQ subchart ##
+#######################
+rabbitmq:
+  auth:
+    username: signalen
+    password: signalen
+
+  persistence:
+    enabled: true
+    size: 1Gi
+    existingClaim: null
+
+############################
+## Elasticsearch subchart ##
+############################
+elasticsearch:
+  clusterName: elasticsearch
+
+  replicas: 1
+  minimumMasterNodes: 1
+  maxUnavailable: false
+  clusterHealthCheckParams: "wait_for_status=yellow&timeout=1s"
+
+  esJavaOpts: "-Xmx512m -Xms512m"
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"

@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "signals-backend.fullname" . }}
+  labels:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+data:
+  ALLOWED_HOSTS: {{ .Values.settings.allowedHosts | quote }}
+  ALLOW_INVALID_ADDRESS_AS_UNVERIFIED: {{ if .Values.settings.allowInvalidAddressAsUnverified }}"True"{{ else }}"False"{{ end }}
+  API_PDF_LOGO_STATIC_FILE: {{ .Values.settings.apiPdfLogoStaticFile | quote }}
+  API_TRANSFORM_SOURCE_BASED_ON_REPORTER: {{ if .Values.settings.apiTransformSourceBasedOnReporter }}"True"{{ else }}"False"{{ end }}
+  {{- if .Values.settings.apiTransformSourceBasedOnReporter }}
+  API_TRANSFORM_SOURCE_BASED_ON_REPORTER_DOMAIN_EXTENSIONS: {{ .Values.settings.apiTransformSourceBasedOnReporterDomainExtensions | quote }}
+  API_TRANSFORM_SOURCE_BASED_ON_REPORTER_EXCEPTIONS: {{ .Values.settings.apiTransformSourceBasedOnReporterExceptions | quote }}
+  API_TRANSFORM_SOURCE_BASED_ON_REPORTER_SOURCE: {{ .Values.settings.apiTransformSourceBasedOnReporterSource | quote }}
+  {{- end }}
+  CELERY_EMAIL_BACKEND: {{ .Values.settings.celeryEmailBackend | quote }}
+  DATABASE_HOST_OVERRIDE: {{ .Values.settings.database.host | quote }}
+  DATABASE_PORT_OVERRIDE: {{ .Values.settings.database.port | quote }}
+  DATABASE_USER: {{ .Values.settings.database.username | quote }}
+  DATABASE_NAME: {{ .Values.settings.database.name | quote }}
+  DATAPUNT_API_URL: {{ .Values.settings.datapuntApiUrl | quote }}
+  DEFAULT_FROM_EMAIL: {{ .Values.settings.defaultFromEmail | quote }}
+  DEFAULT_MAP_TILE_SERVER: {{ .Values.settings.defaultMapTileServer | quote }}
+  DEFAULT_PDOK_MUNICIPALITIES: {{ .Values.settings.defaultPdokMunicipalities | quote }}
+  DWH_MEDIA_ROOT: "/dwh_media"
+  DJANGO_LOG_LEVEL: "error"
+  DJANGO_SETTINGS_MODULE: "signals.settings"
+  EMAIL_HOST: {{ .Values.settings.email.hostname | quote }}
+  EMAIL_PORT: {{ .Values.settings.email.port | quote }}
+  EMAIL_HOST_USER: {{ .Values.settings.email.username | quote }}
+  EMAIL_REST_ENDPOINT: {{ .Values.settings.email.restEndpoint | quote }}
+  EMAIL_REST_ENDPOINT_CLIENT_CERT: {{ .Values.settings.email.restEndpointClientCert | quote }}
+  EMAIL_REST_ENDPOINT_CLIENT_KEY: {{ .Values.settings.email.restEndpointClientKey | quote }}
+  EMAIL_USE_TLS: {{ if .Values.settings.email.useTLS }}"True"{{ else }}"False"{{ end }}
+  EMAIL_USE_SSL: {{ if .Values.settings.email.useSSL }}"True"{{ else }}"False"{{ end }}
+  ELASTICSEARCH_HOST: {{ .Values.settings.elasticsearch.host | quote }}
+  ELASTICSEARCH_INDEX: {{ .Values.settings.elasticsearch.index | quote }}
+  ENABLE_PUBLIC_GEO_SIGNAL_ENDPOINT: {{ if .Values.settings.enablePublicGeoSignalEndpoint }}"True"{{ else }}"False"{{ end }}
+  ENVIRONMENT: {{ .Values.settings.environment | quote }}
+  FRONTEND_URL: {{ .Values.settings.frontendUrl | quote }}
+  JWKS_URL: {{ .Values.settings.jwksUrl | quote }}
+  {{- if .Values.settings.pubJwks }}
+  PUB_JWKS: {{ .Values.settings.pubJwks | quote }}
+  {{- end }}
+  ORGANIZATION_NAME: {{ .Values.settings.organizationName | quote }}
+  RABBITMQ_HOST: {{ .Values.settings.rabbitmq.host | quote }}
+  RABBITMQ_USER: {{ .Values.settings.rabbitmq.username | quote }}
+  RABBITMQ_VHOST: {{ .Values.settings.rabbitmq.vhost | quote }}
+  {{- if .Values.settings.sigmax.enabled }}
+  SIGMAX_SERVER: {{ .Values.settings.sigmax.serverUrl | quote }}
+  {{- end }}
+  SIGNALS_ML_TOOL_ENDPOINT: {{ .Values.settings.classificationEndpoint | quote }}
+  USER_ID_FIELD: {{ .Values.settings.userIdField | quote }}
+  USER_ID_FIELDS: {{ .Values.settings.userIdField | quote }}
+  EXCLUDED_PERMISSIONS_IN_RESPONSE: {{ .Values.settings.excludedPermissionsInResponses | nospace | quote }}
+  SYSTEM_MAIL_FEEDBACK_RECEIVED_ENABLED: {{ if .Values.settings.systemMailFeedbackReceivedEnabled }}"True"{{ else }}"False"{{ end }}
+  REPORTER_MAIL_HANDLED_NEGATIVE_CONTACT_ENABLED: {{ if .Values.settings.reporterMailHandledNegativeContactEnabled }}"True"{{ else }}"False"{{ end }}
+  SIGNAL_HISTORY_LOG_ENABLED: {{ if .Values.settings.signalHistoryLogEnabled }}"True"{{ else }}"False"{{ end }}

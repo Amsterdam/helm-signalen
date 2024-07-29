@@ -1,0 +1,78 @@
+{{- if .Values.managementCommands }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "signals-backend.fullname" . }}-management-commands
+  labels:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+          args:
+            - "-c"
+            - |
+                {{ .Values.managementCommands | nindent 16 }}
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.envVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "signals-backend.fullname" . }}
+            - secretRef:
+                name: {{ if .Values.existingSecret }}{{ .Values.existingSecret }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+          {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: media
+              mountPath: /app/media
+            - name: dwh-media
+              mountPath: /dwh_media
+{{- if ne (len .Values.extraVolumeMounts) 0 }}
+{{ toYaml .Values.extraVolumeMounts | indent 12 }}
+{{- end }}
+      volumes:
+        - name: media
+        {{- if .Values.persistence.media.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.media.existingClaim }}{{ .Values.persistence.media.existingClaim }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        - name: dwh-media
+        {{- if .Values.persistence.datawarehouse.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.datawarehouse.existingClaim }}{{ .Values.persistence.datawarehouse.existingClaim }}{{ else }}{{ template "signals-backend.fullname" . }}-datawarehouse{{ end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+{{- if ne (len .Values.extraVolumes) 0 }}
+{{ toYaml .Values.extraVolumes | indent 8 }}
+{{- end }}
+{{- end }}

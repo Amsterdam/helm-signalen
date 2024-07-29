@@ -1,0 +1,91 @@
+{{- if .Values.flower.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "signals-backend.celery-flower" . }}
+  labels:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+    component: cellery-flower
+spec:
+  replicas: {{ .Values.flowerReplicaCount }}
+  selector:
+    matchLabels:
+      {{- include "signals-backend.selectorLabels" . | nindent 6 }}
+      component: celery-flower
+  strategy:
+    type: {{ .Values.deploymentStrategy }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "signals-backend.labels" . | nindent 8 }}
+        component: celery-flower
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: celery-flower
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/usr/local/bin/celery"]
+          args:
+            - '--app=signals'
+            - 'flower'
+            - '--address=0.0.0.0'
+            - '--port=8000'
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.envVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "signals-backend.fullname" . }}
+            - secretRef:
+                name: {{ if .Values.existingSecret }}{{ .Values.existingSecret }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+          {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+          {{- toYaml .Values.flower.resources | nindent 12 }}
+          volumeMounts:
+            - name: media
+              mountPath: /app/media
+            - name: dwh-media
+              mountPath: /dwh_media
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 8000
+{{- if ne (len .Values.extraVolumeMounts) 0 }}
+{{ toYaml .Values.extraVolumeMounts | indent 12 }}
+{{- end }}
+      volumes:
+        - name: media
+        {{- if and .Values.persistence.media.enabled .Values.persistence.media.enabledOnflower }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.media.existingClaim }}{{ .Values.persistence.media.existingClaim }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        - name: dwh-media
+        {{- if and .Values.persistence.datawarehouse.enabled .Values.persistence.datawarehouse.enabledOnflower }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.datawarehouse.existingClaim }}{{ .Values.persistence.datawarehouse.existingClaim }}{{ else }}{{ template "signals-backend.fullname" . }}-datawarehouse{{ end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+{{- if ne (len .Values.extraVolumes) 0 }}
+{{ toYaml .Values.extraVolumes | indent 8 }}
+{{- end }}
+{{- end }}

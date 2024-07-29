@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "signals-backend.celery-beat" . }}
+  labels:
+    {{- include "signals-backend.labels" . | nindent 4 }}
+    component: cellery-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "signals-backend.selectorLabels" . | nindent 6 }}
+      component: celery-beat
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "signals-backend.labels" . | nindent 8 }}
+        component: celery-beat
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: celery-beat
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/usr/local/bin/celery"]
+          args:
+            - '--app=signals'
+            - 'beat'
+            - '--loglevel={{ .Values.celery.loglevel }}'
+            - '--pidfile=/tmp/celerybeat.pid'
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.envVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "signals-backend.fullname" . }}
+            - secretRef:
+                name: {{ if .Values.existingSecret }}{{ .Values.existingSecret }}{{ else }}{{ template "signals-backend.fullname" . }}{{ end }}
+          {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+          {{- toYaml .Values.beat.resources | nindent 12 }}
