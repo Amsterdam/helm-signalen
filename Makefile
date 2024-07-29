@@ -29,6 +29,8 @@ push: build
 		echo "F: " ${file}; \
 		helm push "${file}" oci://${REGISTRY}/${REPOSITORY}; \
 	done
+	helm push "/agent/_work/1/s/self/frontend-0.0.0-main.tgz" oci://${REGISTRY}/${REPOSITORY}; \
+	helm push "/agent/_work/1/s/self/backend-0.0.0-main.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 
 helm-unittest-plugin:
 	echo heml-unittest
