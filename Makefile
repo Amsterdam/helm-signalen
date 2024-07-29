@@ -17,7 +17,7 @@ docs:
                 -r README.md
 
 build: clean
-	echo $(ARTIFACTS_DIR)
+	echo $(ARTIFACTS_DIR); \
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
 		echo $$chart; \
 		helm dependency update $$chart; \
