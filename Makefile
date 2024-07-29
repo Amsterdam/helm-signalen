@@ -20,12 +20,12 @@ build: clean
 		echo $$chart; \
 		helm dependency update $$chart; \
 		helm package $$chart --version ${VERSION}; \
-		mkdir -p ${BUILD_REPOSITORY_LOCALPATH}/charts && mv -v ${BUILD_REPOSITORY_LOCALPATH}/*.tgz ${BUILD_REPOSITORY_LOCALPATH}/charts/; \
 	done
 
 push: build
-	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
-		helm push ${BUILD_REPOSITORY_LOCALPATH}/$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
+	PKGS := $(shell find ${BUILD_REPOSITORY_LOCALPATH} -type f -name "*.tgz")
+	@for pkg in $(PKGS); do \
+		helm push ${pkg} oci://${REGISTRY}/${REPOSITORY}; \
 	done
 
 helm-unittest-plugin:
