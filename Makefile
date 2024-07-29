@@ -9,7 +9,7 @@ PWD:=$(shell pwd)
 CHARTS_DIR ?= charts
 
 clean:
-	pwd
+	find .
 
 docs:
 	npm install @bitnami/readme-generator-for-helm@2.5.0 ./node_modules/.bin/readme-generator readme-generator \
