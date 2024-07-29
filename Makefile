@@ -16,14 +16,14 @@ docs:
                 -r README.md
 
 build: clean
-        @for chart in $(wildcard ${CHARTS_DIR}/*); do \
-                helm package $$chart --version ${VERSION}; \
-        done
+	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
+		helm package $$chart --version ${VERSION}; \
+	done
 
 push: build
-        @for chart in $(wildcard ${CHARTS_DIR}/*); do \
-                helm push ./$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
-        done
+	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
+		helm push ./$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
+	done
 
 helm-unittest-plugin:
 	helm plugin list unittest | grep "${HELM_UNITTEST_VERSION}" || ( helm plugin remove unittest; helm plugin install https://github.com/helm-unittest/helm-unittest --version ${HELM_UNITTEST_VERSION} )
