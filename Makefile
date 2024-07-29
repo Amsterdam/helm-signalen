@@ -18,7 +18,7 @@ docs:
 build: clean
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
 		echo $$chart; \
-		helm dependency update; \
+		helm dependency update $$chart; \
 		helm package $$chart --version ${VERSION}; \
 	done
 
