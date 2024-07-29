@@ -4,12 +4,12 @@ REPOSITORY ?= amsterdam
 
 UID:=$(shell id --user)
 GID:=$(shell id --group)
-PWD:=$(shell pwd)
+ARTIFACTS_DIR := $(shell echo $$System.ArtifactsDirectory)
 
 CHARTS_DIR ?= charts
 
 clean:
-	echo nope
+	echo $(ARTIFACTS_DIR)
 
 docs:
 	npm install @bitnami/readme-generator-for-helm@2.5.0 ./node_modules/.bin/readme-generator readme-generator \
@@ -21,12 +21,11 @@ build: clean
 		echo $$chart; \
 		helm dependency update $$chart; \
 		helm package $$chart --version ${VERSION}; \
-		echo $(pwd) ; \
 	done
 
 push: build
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
-		helm push /$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
+		helm push $(ARTIFACTS_DIR)/$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
 	done
 
 helm-unittest-plugin:
