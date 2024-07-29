@@ -8,11 +8,10 @@ GID:=$(shell id --group)
 CHARTS_DIR ?= charts
 
 clean:
-        rm -rf *.tgz
+	rm -rf *.tgz
 
 docs:
-        npm install @bitnami/readme-generator-for-helm@2.5.0
-        ./node_modules/.bin/readme-generator readme-generator \
+	npm install @bitnami/readme-generator-for-helm@2.5.0 ./node_modules/.bin/readme-generator readme-generator \
                 -v values.docs.yaml \
                 -r README.md
 
@@ -27,12 +26,12 @@ push: build
         done
 
 helm-unittest-plugin:
-        helm plugin list unittest | grep "${HELM_UNITTEST_VERSION}" || ( helm plugin remove unittest; helm plugin install https://github.com/helm-unittest/helm-unittest --version ${HELM_UNITTEST_VERSION} )
+	helm plugin list unittest | grep "${HELM_UNITTEST_VERSION}" || ( helm plugin remove unittest; helm plugin install https://github.com/helm-unittest/helm-unittest --version ${HELM_UNITTEST_VERSION} )
 
 lint:
-        helm lint
+	helm lint
 
 test: lint helm-unittest-plugin
-        @for chart in $(wildcard ${CHARTS_DIR}/*); do \
-                helm unittest $$chart --debug; \
-        done
+	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
+		helm unittest $$chart --debug; \
+	done
