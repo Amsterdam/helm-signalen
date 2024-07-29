@@ -4,7 +4,7 @@ REPOSITORY ?= amsterdam
 
 UID:=$(shell id --user)
 GID:=$(shell id --group)
-ARTIFACTS_DIR := $(shell echo $$System.ArtifactsDirectory)
+ARTIFACTS_DIR := $(shell env)
 
 CHARTS_DIR ?= charts
 
@@ -17,6 +17,7 @@ docs:
                 -r README.md
 
 build: clean
+	echo $(ARTIFACTS_DIR)
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
 		echo $$chart; \
 		helm dependency update $$chart; \
