@@ -24,14 +24,10 @@ build: clean
 	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +;
 
 push: build
-	FILES=$(echo ${BUILD_REPOSITORY_LOCALPATH}/*.tgz)
-	@for file in $(FILES); do \
-		echo "F: " ${file}; \
-		helm push "${file}" oci://${REGISTRY}/${REPOSITORY}; \
-	done
 	helm push "${BUILD_REPOSITORY_LOCALPATH}/frontend-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 	helm push "${BUILD_REPOSITORY_LOCALPATH}/backend-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 	helm push "${BUILD_REPOSITORY_LOCALPATH}/classification-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
+	helm push "${BUILD_REPOSITORY_LOCALPATH}/mapserver-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 
 helm-unittest-plugin:
 	echo heml-unittest
