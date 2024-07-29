@@ -24,8 +24,8 @@ build: clean
 	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +; \
 
 push: build
-	set -a
-	set -x
+	set -a ; \
+	set -x ; \
 	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +; \
 	echo "BUILD PATH: " ${BUILD_REPOSITORY_LOCALPATH}; \
 	FILES=$(shell echo $(wildcard ${BUILD_REPOSITORY_LOCALPATH}/*.tgz))
