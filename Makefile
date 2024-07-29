@@ -31,6 +31,7 @@ push: build
 	done
 	helm push "${BUILD_REPOSITORY_LOCALPATH}/frontend-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 	helm push "${BUILD_REPOSITORY_LOCALPATH}/backend-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
+	helm push "${BUILD_REPOSITORY_LOCALPATH}/classification-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 
 helm-unittest-plugin:
 	echo heml-unittest
