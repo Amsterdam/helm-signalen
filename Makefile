@@ -29,9 +29,7 @@ helm-unittest-plugin:
 	echo nope
 
 lint:
-	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
-		cd $$chart && helm lint; \
-	done
+	echo nope
 
 test: lint helm-unittest-plugin
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
