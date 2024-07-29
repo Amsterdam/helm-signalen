@@ -23,8 +23,8 @@ build: clean
 	done
 
 push: build
-	@for pkg in $(wildcard ${BUILD_REPOSITORY_LOCALPATH}/*.tgz); do \
-		helm push ${pkg} oci://${REGISTRY}/${REPOSITORY}; \
+	@for file in $(wildcard ${BUILD_REPOSITORY_LOCALPATH}/*.tgz); do \
+		helm push $(basename ${file}) oci://${REGISTRY}/${REPOSITORY}; \
 	done
 
 helm-unittest-plugin:
