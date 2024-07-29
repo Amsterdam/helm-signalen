@@ -24,7 +24,7 @@ build: clean
 
 push: build
 	echo "BUILD PATH: " ${BUILD_REPOSITORY_LOCALPATH}; \
-	FILES:=$(shell echo $(wildcard ${BUILD_REPOSITORY_LOCALPATH}/*.tgz))
+	FILES=$(shell echo $(wildcard ${BUILD_REPOSITORY_LOCALPATH}/*.tgz))
 	@for file in $(FILES); do \
 		echo "F: " ${file}; \
 		helm push $(basename ${file}) oci://${REGISTRY}/${REPOSITORY}; \
