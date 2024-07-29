@@ -8,7 +8,7 @@ GID:=$(shell id --group)
 CHARTS_DIR ?= charts
 
 clean:
-	echo $(ARTIFACTS_DIR)
+	echo clean
 
 docs:
 	npm install @bitnami/readme-generator-for-helm@2.5.0 ./node_modules/.bin/readme-generator readme-generator \
@@ -24,6 +24,9 @@ build: clean
 	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +; \
 
 push: build
+	set -a
+	set -x
+	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +; \
 	echo "BUILD PATH: " ${BUILD_REPOSITORY_LOCALPATH}; \
 	FILES=$(shell echo $(wildcard ${BUILD_REPOSITORY_LOCALPATH}/*.tgz))
 	@for file in $(FILES); do \
@@ -32,9 +35,9 @@ push: build
 	done
 
 helm-unittest-plugin:
-	echo $(ARTIFACTS_DIR)
+	echo heml-unittest
 
 lint:
-	echo $(ARTIFACTS_DIR)
+	echo lint
 test: lint helm-unittest-plugin
-	pwd
+	echo unittest
