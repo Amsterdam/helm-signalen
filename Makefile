@@ -4,7 +4,7 @@ REPOSITORY ?= amsterdam
 
 UID:=$(shell id --user)
 GID:=$(shell id --group)
-ARTIFACTS_DIR := $(shell env)
+ARTIFACTS_DIR := $(shell echo $BUILD_REPOSITORY_LOCALPATH)
 
 CHARTS_DIR ?= charts
 
@@ -30,10 +30,9 @@ push: build
 	done
 
 helm-unittest-plugin:
-	pwd
+	echo $(ARTIFACTS_DIR)
 
 lint:
-	pwd
-
+	echo $(ARTIFACTS_DIR)
 test: lint helm-unittest-plugin
 	pwd
