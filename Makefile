@@ -24,8 +24,7 @@ build: clean
 	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +;
 
 push: build
-	ls -la ${BUILD_REPOSITORY_LOCALPATH}; \
-	FILES=$(shell echo $(wildcard ${BUILD_REPOSITORY_LOCALPATH}/*.tgz))
+	FILES=$(echo ${BUILD_REPOSITORY_LOCALPATH}/*.tgz)
 	@for file in $(FILES); do \
 		echo "F: " ${file}; \
 		helm push "${file}" oci://${REGISTRY}/${REPOSITORY}; \
