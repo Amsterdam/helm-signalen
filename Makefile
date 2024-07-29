@@ -25,7 +25,7 @@ build: clean
 
 push: build
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
-		helm push ./$(PWD)/$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
+		helm push /$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
 	done
 
 helm-unittest-plugin:
