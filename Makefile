@@ -4,6 +4,7 @@ REPOSITORY ?= amsterdam
 
 UID:=$(shell id --user)
 GID:=$(shell id --group)
+PWD:=$(shell pwd)
 
 CHARTS_DIR ?= charts
 
@@ -25,7 +26,7 @@ build: clean
 push: build
 	find . ;\
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
-		helm push ./$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
+		helm push ./$(PWD)/$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
 	done
 
 helm-unittest-plugin:
