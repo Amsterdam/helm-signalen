@@ -24,7 +24,6 @@ build: clean
 	done
 
 push: build
-	find . ;\
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
 		helm push ./$(PWD)/$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
 	done
