@@ -4,7 +4,6 @@ REPOSITORY ?= amsterdam
 
 UID:=$(shell id --user)
 GID:=$(shell id --group)
-ARTIFACTS_DIR := $(shell echo $BUILD_REPOSITORY_LOCALPATH)
 
 CHARTS_DIR ?= charts
 
@@ -25,7 +24,7 @@ build: clean
 
 push: build
 	@for chart in $(wildcard ${CHARTS_DIR}/*); do \
-		helm push $(ARTIFACTS_DIR)/$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
+		helm push ${BUILD_REPOSITORY_LOCALPATH}/$$chart-${VERSION}.tgz oci://${REGISTRY}/${REPOSITORY}; \
 	done
 
 helm-unittest-plugin:
