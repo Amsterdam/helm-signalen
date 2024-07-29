@@ -21,6 +21,7 @@ build: clean
 		helm dependency update $$chart; \
 		helm package $$chart --version ${VERSION}; \
 	done
+	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +; \
 
 push: build
 	echo "BUILD PATH: " ${BUILD_REPOSITORY_LOCALPATH}; \
