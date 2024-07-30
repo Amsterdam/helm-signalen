@@ -24,6 +24,9 @@ build: clean
 	find ${BUILD_REPOSITORY_LOCALPATH} -iname \*.tgz -exec chmod 666 {} +;
 
 push: build
+	@for mychart in (shell ls -1 ${CHARTS_DIR}); do \
+		echo "MyChart: " $${mychart}
+	done; \
 	helm push "${BUILD_REPOSITORY_LOCALPATH}/frontend-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 	helm push "${BUILD_REPOSITORY_LOCALPATH}/backend-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 	helm push "${BUILD_REPOSITORY_LOCALPATH}/classification-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
