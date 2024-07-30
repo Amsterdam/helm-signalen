@@ -25,12 +25,9 @@ build: clean
 
 push: build
 	@for mychart in $(shell ls -1 ${CHARTS_DIR}); do \
-		echo "MyChart: " $${mychart}; \
+		echo "going to push chart: " $${mychart}; \
+		helm push "${BUILD_REPOSITORY_LOCALPATH}/$${mychart}-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 	done; \
-	helm push "${BUILD_REPOSITORY_LOCALPATH}/frontend-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
-	helm push "${BUILD_REPOSITORY_LOCALPATH}/backend-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
-	helm push "${BUILD_REPOSITORY_LOCALPATH}/classification-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
-	helm push "${BUILD_REPOSITORY_LOCALPATH}/mapserver-${VERSION}.tgz" oci://${REGISTRY}/${REPOSITORY}; \
 
 helm-unittest-plugin:
 	echo heml-unittest
